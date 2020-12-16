@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
+#include <Adafruit_SHT31.h>
 #include "CJMCU8128.h"
 
 // Wifi Setup
@@ -15,6 +16,7 @@ IPAddress subnet(255, 255, 0, 0);
 
 // Sensors
 CJMCU8128 cjmcu;
+Adafruit_SHT31 sht;
 
 // Prepares the html page with the data from the sensor
 String prepareHtmlPage()
@@ -30,8 +32,8 @@ String prepareHtmlPage()
         "</head>" +
         "<body>" +
             "<h1>Sensor Data</h1>" +
-            "<p>Temperature (" + char(176) + "C): " + cjmcu.getTemperature() + "</p>" +
-            "<p>Humidity (%): " + cjmcu.getHumidity() + "</p>" +
+            "<p>Temperature (" + char(176) + "C): " + sht.readTemperature() + "</p>" +
+            "<p>Humidity (%): " + sht.readHumidity() + "</p>" +
             "<p>Air Pressure (hpa): " + cjmcu.getPressure() + "</p>" +
             "<p>eCO2 (ppm): " + cjmcu.getCO2() + "</p>" +
             "<p>TVOC (ppb): " + cjmcu.getTVOC() + "</p>" +
@@ -79,6 +81,7 @@ void setup()
     Serial.println();
     Wire.begin(); // Start I2C
     cjmcu.begin(); // Start CJMCU8128
+    sht.begin(0x44); // Start SHT31
     serverSetup();
 }
 

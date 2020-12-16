@@ -23,8 +23,8 @@ void CJMCU8128::update()
         Serial.println(hdc.readT());
         Serial.println(hdc.readH());
         // Temp and Humiditiy (Celsius and RH%)
-        data[0] = hdc.readT() - 3.5; // These constants are for compensating for board heating
-        data[1] = hdc.readH() + 3.8; // A sepearte board would be better
+        data[0] = hdc.readT();  // These values will be incorrect because of the self-heating
+        data[1] = hdc.readH();
 
         // Air pressure (hpa)
         bme.readTempC();                         // Need this to get proper reading
