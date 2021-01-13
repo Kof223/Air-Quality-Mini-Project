@@ -18,11 +18,15 @@ IPAddress subnet(255, 255, 0, 0);
 CJMCU8128 cjmcu;
 Adafruit_SHT31 sht;
 
+// Other Variables
+const int relay = 12; //D6 on board
+bool turnOn = false;
+
 // Prepares the html page with the data from the sensor
 String prepareHtmlPage()
 {
-    String htmlPage =
-        String("<!DOCTYPE html>") +
+    String htmlPage = "";
+    htmlPage = String("<!DOCTYPE html>") +
         "<html>" +
         "<head>" +
             "<style>" +
@@ -37,18 +41,49 @@ String prepareHtmlPage()
             "<p>Air Pressure (hpa): " + cjmcu.getPressure() + "</p>" +
             "<p>eCO2 (ppm): " + cjmcu.getCO2() + "</p>" +
             "<p>TVOC (ppb): " + cjmcu.getTVOC() + "</p>" +
-            "<form action=\"/\" method=\"Refresh\">" +
+            "<form action=\"/\" method=\"get\">" +
                 "<input type=\"submit\" value=\"Refresh\" style=\"height:200px; width:100%; font-size:100%\">" +
             "</form>" +
-        "</body>" +
-        "</html>";
+            "<p><br>Air purifier status: " + (turnOn ? "On" : "Off") + "</p>";
+    if (turnOn) 
+    {
+        htmlPage += String("") +
+            "<form action=\"/manual_off\">" +
+                "<input type=\"submit\" value=\"" + (turnOn ? "Turn Off" : "Turn On") + "\" style=\"height:200px; width:100%; font-size:100%\">" +
+            "</form>";
+    }
+    else
+    {
+        htmlPage += String("") +
+            "<form action=\"/manual_on\">" +
+                "<input type=\"submit\" value=\"" + (turnOn ? "Turn Off" : "Turn On") + "\" style=\"height:200px; width:100%; font-size:100%\">" +
+            "</form>";
+    }
+
+    htmlPage += "</body></html>";
     return htmlPage;
 }
 
-// Only one page for the html page
+// Default page or refresh
 void handleRoot()
 {
     cjmcu.update();
+    server.send(200, "text/html", prepareHtmlPage());
+}
+
+// Method for turning ON the air purifier manually
+void manualOn()
+{
+    cjmcu.update();
+    turnOn = true;
+    server.send(200, "text/html", prepareHtmlPage());
+}
+
+// Method for turning OFF the air purifier manually
+void manualOff()
+{
+    cjmcu.update();
+    turnOn = false;
     server.send(200, "text/html", prepareHtmlPage());
 }
 
@@ -71,6 +106,8 @@ void serverSetup()
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
     server.on("/", handleRoot);
+    server.on("/manual_on", manualOn);
+    server.on("/manual_off", manualOff);
     server.begin();
     Serial.println("HTTP server started");
 }
@@ -78,7 +115,7 @@ void serverSetup()
 void setup()
 {
     Serial.begin(115200);
-    Serial.println();
+    pinMode(relay, OUTPUT);
     Wire.begin(); // Start I2C
     cjmcu.begin(); // Start CJMCU8128
     sht.begin(0x44); // Start SHT31
@@ -87,5 +124,13 @@ void setup()
 
 void loop()
 {
+    // Handle html pages
     server.handleClient();
+
+    // Handle relay
+    if (turnOn) {
+        digitalWrite(relay, HIGH);
+    } else {
+        digitalWrite(relay, LOW);
+    }
 }

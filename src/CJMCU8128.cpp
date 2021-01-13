@@ -20,8 +20,6 @@ void CJMCU8128::update()
     if (ccs.dataAvailable())
     {
         ccs.readAlgorithmResults();
-        Serial.println(hdc.readT());
-        Serial.println(hdc.readH());
         // Temp and Humiditiy (Celsius and RH%)
         data[0] = hdc.readT();  // These values will be incorrect because of the self-heating
         data[1] = hdc.readH();
